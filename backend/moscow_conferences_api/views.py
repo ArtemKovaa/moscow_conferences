@@ -4,11 +4,12 @@ from rest_framework.parsers import JSONParser
 from rest_framework.response import Response
 from rest_framework import status, viewsets
 
-from moscow_conferences_api.models import Location, Conference
-from moscow_conferences_api.serializers import LocationSerializer, ConferenceSerializer
+from moscow_conferences_api.models import Conference
+from moscow_conferences_api.serializers import ConferenceSerializer
 
 
 class ConferencesViewSet(viewsets.ModelViewSet):
+    serializer_class = ConferenceSerializer
 
     @csrf_exempt
     def list(self, request):
@@ -44,7 +45,8 @@ class ConferencesViewSet(viewsets.ModelViewSet):
         return Response(conference_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @csrf_exempt
-    def destroy(self, conference_id):
-        conference = Conference.objects.get(id=conference_id)
+    def destroy(self, request, pk=None):
+        queryset = Conference.objects.all()
+        conference = get_object_or_404(queryset, pk=pk)
         conference.delete()
         return Response(status=status.HTTP_200_OK)

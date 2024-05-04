@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Конференции в Москве</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <a href="organizer.html">Перейти на страницу организатора</a>
+    <h1>Список конференций</h1>
+    <div id="conferenceList" style="width: 100%;">
+        <!-- список конференций будет сгенерирован тут -->
+    </div>
+    <button id="returnButton" style="display: none;">Вернуться к списку мероприятий</button>
+    <script>
+        const baseUrl = "http://127.0.0.1:8000/api/v1";
+        let lastClickedId = undefined;
+
+        const refreshList = () => {
+            $("#conferenceList").html("");
+            $("#returnButton").hide();
+            $.getJSON(`${baseUrl}/conferences/`, function (data) {
+                for (let i = 0; i < data.length; i++) {
+                    let conferenceItem = $("<div><p style='display:inline-block;margin-right:10px;'>" + data[i].name + "</p><button data-id='"+ data[i].id +"' class='moreBtn'>Посмотреть подробную информацию</button></div>");
+                    $("#conferenceList").append(conferenceItem);
+                }
+            });
+        };
+
+        $("#conferenceList").on("click", ".moreBtn", function () {
+            let selectedId = $(this).data("id");
+            if (lastClickedId !== selectedId) {
+                $("#conferenceList").html("");
+                $("#returnButton").show();
+                lastClickedId = selectedId;
+                $.ajax({
+                    url: `${baseUrl}/conferences/${selectedId}/`,
+                    type: "GET",
+                    success: function (details) {
+                        const {name, description, start_date, location} = details;
+                        const dateTime = start_date.split("T");
+                        const formattedDate = `${dateTime[0]} в ${dateTime[1].slice(0,8)}`
+                        $("#conferenceList").html(`Название: ${name}<br>Описание: ${description}<br>Дата начала: ${formattedDate}<br>Место проведения: ${location}`);
+                    }
+                });
+            }
+        });
+
+        $("#returnButton").on("click", function () {
+            refreshList();
+            lastClickedId = undefined;
+        });
+
+        $(document).ready(function () {
+            refreshList();
+        });
+    </script>
+</body>
+</html>

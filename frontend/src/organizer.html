@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Панель организатора</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+    <a href="customer.html">Перейти на страницу посетителя</a>
+    <h1>Список конференций</h1>
+    <div id="conferenceList">
+        <!-- список конференций будет сгенерирован тут -->
+    </div>
+    <form id="newConferenceForm" class="hidden">
+        <label for="name">Название:</label><br>
+        <input type="text" id="name" name="name"><br>
+        <label for="description">Описание:</label><br>
+        <input type="text" id="description" name="description"><br>
+        <label for="location">Локация:</label><br>
+        <input type="text" id="location" name="location"><br>
+        <label for="start_date">Дата начала:</label><br>
+        <input type="datetime-local" id="start_date" name="start_date"><br>
+        <input type="submit" value="Добавить">
+    </form>
+    <button id="showFormButton">Добавить конференцию</button>
+    <script>
+        const baseUrl = "http://127.0.0.1:8000/api/v1"
+
+        $("#showFormButton").click(function () {
+            // Проверяем, видима ли форма на данный момент
+            if ($("#newConferenceForm").hasClass("hidden")) {
+                $(this).text("Закрыть форму добавления конференции");
+            } else {
+                $(this).text("Добавить конференцию");
+            }
+
+            $("#newConferenceForm").toggleClass("hidden");
+        });
+
+        $('#newConferenceForm').submit(function (e) {
+            e.preventDefault();
+            let formData = {
+                'name': $('#name').val(),
+                'description': $('#description').val(),
+                'location': $('#location').val(),
+                'start_date': $('#start_date').val()
+            };
+            $.ajax({
+                url: `${baseUrl}/conferences/`,
+                type: 'post',
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function (result) {
+                    $("#newConferenceForm").toggleClass("hidden");
+                    $("#showFormButton").text("Добавить конференцию");
+                    location.reload();
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            $.getJSON(`${baseUrl}/conferences/`, function (data) {
+                conferenceData = data;
+                for (let i = 0; i < data.length; i++) {
+                    $("#conferenceList").append("<p>" + data[i].name
+                        + ` <button onclick='deleteConference(${data[i].id})'>Удалить</button>`
+                        + ` <button onclick='showEditForm(${data[i].id})'>Редактировать</button>`
+                        + ` <button onclick='showDetails(${data[i].id})'>Подробнее</button></p>`
+                    );
+                }
+            });
+        });
+
+        function showDetails(id) {
+            $.getJSON(`${baseUrl}/conferences/${id}`, function (data) {
+                alert(`Описание: ${data.description} | Адрес проведения: ${data.location} | Время начала: ${data.start_date}`);
+            });
+        }
+
+        function showEditForm(id) {
+            $.getJSON(`${baseUrl}/conferences/${id}`, function (data) {
+                $("#editForm").remove();
+                $('#showFormButton').hide()
+
+                let date = new Date(data.start_date);
+                let localDateTime = date.getFullYear() + '-' +
+                    ('0' + (date.getMonth() + 1)).slice(-2) + '-' +
+                    ('0' + date.getDate()).slice(-2) + 'T' +
+                    ('0' + date.getHours()).slice(-2) + ':' +
+                    ('0' + date.getMinutes()).slice(-2);
+
+                let formHtml = `
+                        <form id="editForm">
+                            <label for="name">Название:</label><br>
+                            <input type="text" id="name" name="name" value="${data.name}"><br>
+                            <label for="description">Описание:</label><br>
+                            <input type="text" id="description" name="description" value="${data.description}"><br>
+                            <label for="location">Место проведения:</label><br>
+                            <input type="text" id="location" name="location" value="${data.location}"><br>
+                            <label for="start_date">Дата начала:</label><br>
+                            <input type="datetime-local" id="start_date" name="start_date" value="${localDateTime}"><br>
+                            <button type="button" onclick="submitEditForm(${id})">Сохранить</button>
+                        </form>`;
+                $("#conferenceList").append(formHtml);
+            });
+        }
+
+        function submitEditForm(id) {
+            let name = $('#name').val();
+            let description = $('#description').val();
+            let location_field = $('#location').val();
+            let start_date = $('#start_date').val();
+
+            $.ajax({
+                url: `${baseUrl}/conferences/${id}/`,
+                type: 'PATCH',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    name: name,
+                    description: description,
+                    location: location_field,
+                    start_date: start_date
+                }),
+                success: function (result) {
+                    location.reload();
+                    $("#editForm").addClass("hidden");
+                }
+            });
+        }
+
+        function deleteConference(id) {
+            $.ajax({
+                url: `${baseUrl}/conferences/${id}`,
+                type: 'DELETE',
+                success: function (result) {
+                    location.reload();
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -5,22 +5,21 @@ from rest_framework.response import Response
 from rest_framework import status, viewsets
 
 from moscow_conferences_api.models import Conference
-from moscow_conferences_api.serializers import ConferenceSerializer
+from moscow_conferences_api.serializers import ConferenceSerializerDetailed, ConferenceSerializerBrief
 
 
 class ConferencesViewSet(viewsets.ModelViewSet):
-    serializer_class = ConferenceSerializer
 
     @csrf_exempt
     def list(self, request):
         queryset = Conference.objects.all()
-        conference_serializer = ConferenceSerializer(queryset, many=True)
+        conference_serializer = ConferenceSerializerBrief(queryset, many=True)
         return Response(conference_serializer.data)
 
     @csrf_exempt
     def create(self, request):
         conference_data = JSONParser().parse(request)
-        conference_serializer = ConferenceSerializer(data=conference_data)
+        conference_serializer = ConferenceSerializerDetailed(data=conference_data)
         if conference_serializer.is_valid():
             conference_serializer.save()
             return Response(status=status.HTTP_201_CREATED)
@@ -30,7 +29,7 @@ class ConferencesViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, pk=None):
         queryset = Conference.objects.all()
         conference = get_object_or_404(queryset, pk=pk)
-        conference_serializer = ConferenceSerializer(conference)
+        conference_serializer = ConferenceSerializerDetailed(conference)
         return Response(conference_serializer.data, status=status.HTTP_200_OK)
 
     @csrf_exempt
@@ -38,7 +37,7 @@ class ConferencesViewSet(viewsets.ModelViewSet):
         conference_data = JSONParser().parse(request)
         queryset = Conference.objects.all()
         conference = get_object_or_404(queryset, pk=pk)
-        conference_serializer = ConferenceSerializer(conference, data=conference_data)
+        conference_serializer = ConferenceSerializerDetailed(conference, data=conference_data)
         if conference_serializer.is_valid():
             conference_serializer.save()
             return Response(status=status.HTTP_200_OK)

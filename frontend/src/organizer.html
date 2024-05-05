@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
-    <a href="customer.html">Перейти на страницу посетителя</a>
+    <a href="index.html">Перейти на страницу посетителя</a>
     <h1>Список конференций</h1>
     <div id="conferenceList">
         <!-- список конференций будет сгенерирован тут -->
@@ -25,7 +25,7 @@
     </form>
     <button id="showFormButton">Добавить конференцию</button>
     <script>
-        const baseUrl = "http://127.0.0.1:8000/api/v1"
+        const baseUrl = "http://localhost/api/v1"
 
         $("#showFormButton").click(function () {
             if ($("#newConferenceForm").hasClass("hidden")) {
